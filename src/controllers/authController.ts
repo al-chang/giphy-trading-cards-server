@@ -1,5 +1,7 @@
 import { Express, Request, Response } from "express";
 import prisma from "../prisma";
+import sessionCheck from "../middleware/sessionCheck";
+import { exclude } from "../utils";
 
 const signup = async (req: Request, res: Response) => {
   const newUser = req.body as { email: string; password: string };
@@ -16,10 +18,13 @@ const signup = async (req: Request, res: Response) => {
 
   const insertedUser = await prisma.user.create({
     data: newUser,
+    select: {
+      id: true,
+      email: true,
+      role: true,
+    },
   });
-  insertedUser.password = "";
-  // @ts-ignore
-  req.session["profile"] = insertedUser;
+  req.session.user = insertedUser;
   res.json(insertedUser);
 };
 
@@ -32,11 +37,14 @@ const login = async (req: Request, res: Response) => {
       email: email,
       password: password,
     },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+    },
   });
   if (existingUser) {
-    existingUser.password = "";
-    // @ts-ignore
-    req.session["profile"] = existingUser;
+    req.session.user = existingUser;
     res.json(existingUser);
   } else {
     res.sendStatus(403);
@@ -49,19 +57,23 @@ const logout = (req: Request, res: Response) => {
 };
 
 const profile = async (req: Request, res: Response) => {
-  // @ts-ignore
-  const profile = req.session["profile"];
-  if (!profile) {
-    res.sendStatus(403);
-    return;
+  const userId = req.session.user!.id;
+  const user = await prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+  });
+  if (user) {
+    res.json(exclude(user, ["password"]));
+  } else {
+    res.sendStatus(404);
   }
-  res.send(profile);
 };
 
 const authController = (app: Express) => {
   app.post("/api/auth/signup", signup);
   app.post("/api/auth/login", login);
-  app.get("/api/auth/profile", profile);
+  app.get("/api/auth/profile", sessionCheck, profile);
   app.post("/api/auth/logout", logout);
 };
 

@@ -1,8 +1,18 @@
-import express, { Express, Request, Response } from "express";
+import express, { Express } from "express";
 import session from "express-session";
 import userController from "./controllers/userController";
 import cors from "cors";
 import authController from "./controllers/authController";
+import { Role } from "@prisma/client";
+import cardController from "./controllers/cardController";
+import { PrismaSessionStore } from "@quixo3/prisma-session-store";
+import prisma from "./prisma";
+
+declare module "express-session" {
+  interface SessionData {
+    user: { id: string; email: string; role: Role };
+  }
+}
 
 const app: Express = express();
 
@@ -20,16 +30,18 @@ app.use(
     secret: process.env.SECRET || "secret",
     resave: false,
     saveUninitialized: true,
+    store: new PrismaSessionStore(prisma, {
+      checkPeriod: 2 * 60 * 1000, //ms
+      dbRecordIdIsSessionId: true,
+      dbRecordIdFunction: undefined,
+    }),
     // cookie: { secure: true },
   })
 );
 
-app.get("/", (req: Request, res: Response) => {
-  res.send("Express + TypeScript Server");
-});
-
 userController(app);
 authController(app);
+cardController(app);
 
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {

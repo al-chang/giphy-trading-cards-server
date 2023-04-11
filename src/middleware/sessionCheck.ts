@@ -1,8 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 
 const sessionCheck = (req: Request, res: Response, next: NextFunction) => {
-  // @ts-ignore
-  if (req.session.profile) {
+  if (req.session.user?.id && req.session.user?.email) {
     next();
   } else {
     res.sendStatus(401);
