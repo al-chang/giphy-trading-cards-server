@@ -22,4 +22,28 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   role      Role     @default(USER)
+  cards     Card[]
+  coins     Int      @default(0)
+}
+
+model Pack {
+  id        String   @id @unique @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  cards     Card[]
+  price     Int
+  coverGif  String
+  tags      String[]
+}
+
+model Card {
+  id        String   @id @unique @default(uuid())
+  gif       String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  pack      Pack     @relation(fields: [packId], references: [id])
+  packId    String
+  owner     User     @relation(fields: [ownerId], references: [id])
+  ownerId   String
 }

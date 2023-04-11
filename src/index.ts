@@ -3,6 +3,13 @@ import session from "express-session";
 import userController from "./controllers/userController";
 import cors from "cors";
 import authController from "./controllers/authController";
+import { User } from "@prisma/client";
+
+declare module "express-session" {
+  interface SessionData {
+    user: { id: string; email: string };
+  }
+}
 
 const app: Express = express();
 
