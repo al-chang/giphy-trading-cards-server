@@ -1,5 +1,18 @@
--- AlterTable
-ALTER TABLE "User" ADD COLUMN     "coins" INTEGER NOT NULL DEFAULT 0;
+-- CreateEnum
+CREATE TYPE "Role" AS ENUM ('ADMIN', 'USER');
+
+-- CreateTable
+CREATE TABLE "User" (
+    "id" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "role" "Role" NOT NULL DEFAULT 'USER',
+    "coins" INTEGER NOT NULL DEFAULT 0,
+
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateTable
 CREATE TABLE "Pack" (
@@ -7,8 +20,9 @@ CREATE TABLE "Pack" (
     "name" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "cost" INTEGER NOT NULL,
+    "price" INTEGER NOT NULL,
     "coverGif" TEXT NOT NULL,
+    "tags" TEXT[],
 
     CONSTRAINT "Pack_pkey" PRIMARY KEY ("id")
 );
@@ -24,6 +38,12 @@ CREATE TABLE "Card" (
 
     CONSTRAINT "Card_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_id_key" ON "User"("id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Pack_id_key" ON "Pack"("id");

@@ -2,6 +2,7 @@ import { Express, Request, Response } from "express";
 import sessionCheck from "../middleware/sessionCheck";
 import prisma from "../prisma";
 import { getRandomGIF } from "../services/giphyService";
+import adminCheck from "../middleware/adminCheck";
 
 const getCurrentUserCards = async (req: Request, res: Response) => {
   const { user } = req.session;
@@ -10,7 +11,7 @@ const getCurrentUserCards = async (req: Request, res: Response) => {
       ownerId: user!.id,
     },
   });
-  res.send(cards);
+  res.json(cards);
 };
 
 export const getUserCards = async (req: Request, res: Response) => {
@@ -20,7 +21,7 @@ export const getUserCards = async (req: Request, res: Response) => {
       ownerId: userId,
     },
   });
-  res.send(cards);
+  res.json(cards);
 };
 
 export const openPack = async (req: Request, res: Response) => {
@@ -50,18 +51,73 @@ export const openPack = async (req: Request, res: Response) => {
   const newCardGif = await getRandomGIF(
     pack.tags[Math.floor(Math.random() * pack.tags.length)]
   );
-  const newCard = await prisma.card.create({
+  const [newCard] = await prisma.$transaction([
+    prisma.card.create({
+      data: {
+        gif: newCardGif,
+        ownerId: user!.id,
+        packId: pack.id,
+      },
+    }),
+    prisma.user.update({
+      where: {
+        id: user!.id,
+      },
+      data: {
+        coins: {
+          decrement: pack.price,
+        },
+      },
+    }),
+  ]);
+
+  res.json(newCard);
+};
+
+export const createPack = async (req: Request, res: Response) => {
+  const { name, price, tags, coverGif } = req.body as {
+    name: string;
+    price: number;
+    tags: string[];
+    coverGif: string;
+  };
+  const newPack = await prisma.pack.create({
     data: {
-      gif: newCardGif,
-      ownerId: user!.id,
-      packId: pack.id,
+      name,
+      price,
+      tags,
+      coverGif,
     },
   });
-  res.json(newCard);
+  res.json(newPack);
+};
+
+export const updatePack = async (req: Request, res: Response) => {
+  const { packId } = req.params;
+  const { name, price, tags, coverGif } = req.body as {
+    name: string;
+    price: number;
+    tags: string[];
+    coverGif: string;
+  };
+  const updatedPack = await prisma.pack.update({
+    where: {
+      id: packId,
+    },
+    data: {
+      name,
+      price,
+      tags,
+      coverGif,
+    },
+  });
+  res.json(updatedPack);
 };
 
 export default (app: Express) => {
   app.get("/api/cards", sessionCheck, getCurrentUserCards);
   app.get("/api/cards/:userId", getUserCards);
   app.post("/api/cards/open-pack/:pack-id", sessionCheck, openPack);
+  app.post("/api/cards/create-pack", adminCheck, createPack);
+  app.put("/api/cards/update-pack/:pack-id", adminCheck, updatePack);
 };
