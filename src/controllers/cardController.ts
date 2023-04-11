@@ -14,7 +14,7 @@ const getCurrentUserCards = async (req: Request, res: Response) => {
   res.json(cards);
 };
 
-export const getUserCards = async (req: Request, res: Response) => {
+const getUserCards = async (req: Request, res: Response) => {
   const { userId } = req.params;
   const cards = await prisma.card.findMany({
     where: {
@@ -24,7 +24,7 @@ export const getUserCards = async (req: Request, res: Response) => {
   res.json(cards);
 };
 
-export const openPack = async (req: Request, res: Response) => {
+const openPack = async (req: Request, res: Response) => {
   const { user } = req.session;
   const { packId } = req.params;
   const pack = await prisma.pack.findUnique({
@@ -74,6 +74,11 @@ export const openPack = async (req: Request, res: Response) => {
   res.json(newCard);
 };
 
+const getPacks = async (req: Request, res: Response) => {
+  const packs = await prisma.pack.findMany();
+  res.json(packs);
+};
+
 export const createPack = async (req: Request, res: Response) => {
   const { name, price, tags, coverGif } = req.body as {
     name: string;
@@ -115,9 +120,14 @@ export const updatePack = async (req: Request, res: Response) => {
 };
 
 export default (app: Express) => {
+  // Cards operations
   app.get("/api/cards", sessionCheck, getCurrentUserCards);
   app.get("/api/cards/:userId", getUserCards);
-  app.post("/api/cards/open-pack/:pack-id", sessionCheck, openPack);
-  app.post("/api/cards/create-pack", adminCheck, createPack);
-  app.put("/api/cards/update-pack/:pack-id", adminCheck, updatePack);
+
+  // Packs operations
+  app.get("/api/packs", getPacks);
+  app.post("/api/packs", adminCheck, createPack);
+  app.put("/api/packs/:pack-id", adminCheck, updatePack);
+
+  app.post("/api/packs/open/:pack-id", sessionCheck, openPack);
 };

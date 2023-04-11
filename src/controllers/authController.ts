@@ -21,6 +21,7 @@ const signup = async (req: Request, res: Response) => {
     select: {
       id: true,
       email: true,
+      role: true,
     },
   });
   req.session.user = insertedUser;
@@ -39,6 +40,7 @@ const login = async (req: Request, res: Response) => {
     select: {
       id: true,
       email: true,
+      role: true,
     },
   });
   if (existingUser) {
