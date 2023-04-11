@@ -1,4 +1,4 @@
-import express, { Express, Request, Response } from "express";
+import express, { Express } from "express";
 import session from "express-session";
 import userController from "./controllers/userController";
 import cors from "cors";
@@ -38,10 +38,6 @@ app.use(
     // cookie: { secure: true },
   })
 );
-
-app.get("/", (req: Request, res: Response) => {
-  res.send("Express + TypeScript Server");
-});
 
 userController(app);
 authController(app);
