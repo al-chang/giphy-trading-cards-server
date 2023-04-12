@@ -1,7 +1,7 @@
 import { Express, Request, Response } from "express";
 import sessionCheck from "../middleware/sessionCheck";
 import prisma from "../prisma";
-import { getRandomGIF } from "../services/giphyService";
+import { getRandomGIFs } from "../services/giphyService";
 import adminCheck from "../middleware/adminCheck";
 
 const getCurrentUserCards = async (req: Request, res: Response) => {
@@ -48,7 +48,7 @@ const openPack = async (req: Request, res: Response) => {
     res.sendStatus(403);
     return;
   }
-  const newCardGif = await getRandomGIF(
+  const newCardGif = await getRandomGIFs(
     pack.tags[Math.floor(Math.random() * pack.tags.length)]
   );
   const [newCard] = await prisma.$transaction([
@@ -127,7 +127,7 @@ export default (app: Express) => {
   // Packs operations
   app.get("/api/packs", getPacks);
   app.post("/api/packs", adminCheck, createPack);
-  app.put("/api/packs/:pack-id", adminCheck, updatePack);
+  app.put("/api/packs/:packId", adminCheck, updatePack);
 
-  app.post("/api/packs/open/:pack-id", sessionCheck, openPack);
+  app.post("/api/packs/open/:packId", sessionCheck, openPack);
 };

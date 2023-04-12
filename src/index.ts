@@ -7,6 +7,10 @@ import { Role } from "@prisma/client";
 import cardController from "./controllers/cardController";
 import { PrismaSessionStore } from "@quixo3/prisma-session-store";
 import prisma from "./prisma";
+import * as dotenv from "dotenv";
+import tradeController from "./controllers/tradeController";
+
+dotenv.config();
 
 declare module "express-session" {
   interface SessionData {
@@ -42,6 +46,7 @@ app.use(
 userController(app);
 authController(app);
 cardController(app);
+tradeController(app);
 
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
