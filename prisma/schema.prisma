@@ -15,15 +15,23 @@ enum Role {
   USER
 }
 
+enum TradeStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
 model User {
-  id        String   @id @unique @default(uuid())
-  email     String   @unique
-  password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  role      Role     @default(USER)
-  cards     Card[]
-  coins     Int      @default(0)
+  id             String   @id @unique @default(uuid())
+  email          String   @unique
+  password       String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  role           Role     @default(USER)
+  cards          Card[]
+  coins          Int      @default(0)
+  tradesSent     Trade[]  @relation("sender")
+  tradesReceived Trade[]  @relation("receiver")
 }
 
 model Session {
@@ -45,12 +53,34 @@ model Pack {
 }
 
 model Card {
-  id        String   @id @unique @default(uuid())
+  id        String          @id @unique @default(uuid())
   gif       String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  pack      Pack     @relation(fields: [packId], references: [id])
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  pack      Pack            @relation(fields: [packId], references: [id])
   packId    String
-  owner     User     @relation(fields: [ownerId], references: [id])
+  owner     User            @relation(fields: [ownerId], references: [id])
   ownerId   String
+  trades    CardsInTrades[]
+}
+
+model Trade {
+  id         String          @id @unique @default(uuid())
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  status     TradeStatus
+  sender     User            @relation(fields: [senderId], references: [id], name: "sender")
+  senderId   String
+  receiver   User            @relation(fields: [receiverId], references: [id], name: "receiver")
+  receiverId String
+  cards      CardsInTrades[]
+}
+
+model CardsInTrades {
+  trade   Trade  @relation(fields: [tradeId], references: [id])
+  tradeId String
+  card    Card   @relation(fields: [cardId], references: [id])
+  cardId  String
+
+  @@id([tradeId, cardId])
 }
