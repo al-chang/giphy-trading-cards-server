@@ -4,7 +4,11 @@ import sessionCheck from "../middleware/sessionCheck";
 import { exclude } from "../utils";
 
 const signup = async (req: Request, res: Response) => {
-  const newUser = req.body as { email: string; password: string };
+  const newUser = req.body as {
+    email: string;
+    username: string;
+    password: string;
+  };
 
   const existingUser = await prisma.user.findFirst({
     where: {
@@ -21,6 +25,7 @@ const signup = async (req: Request, res: Response) => {
     select: {
       id: true,
       email: true,
+      username: true,
       role: true,
     },
   });
@@ -39,6 +44,7 @@ const login = async (req: Request, res: Response) => {
     },
     select: {
       id: true,
+      username: true,
       email: true,
       role: true,
     },

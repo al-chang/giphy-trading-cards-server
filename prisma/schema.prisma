@@ -23,6 +23,7 @@ enum TradeStatus {
 
 model User {
   id             String   @id @unique @default(uuid())
+  username       String   @unique
   email          String   @unique
   password       String
   createdAt      DateTime @default(now())
@@ -59,7 +60,7 @@ model Card {
   updatedAt DateTime        @updatedAt
   pack      Pack            @relation(fields: [packId], references: [id])
   packId    String
-  owner     User            @relation(fields: [ownerId], references: [id])
+  owner     User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId   String
   trades    CardsInTrades[]
 }
@@ -69,17 +70,17 @@ model Trade {
   createdAt  DateTime        @default(now())
   updatedAt  DateTime        @updatedAt
   status     TradeStatus
-  sender     User            @relation(fields: [senderId], references: [id], name: "sender")
-  senderId   String
-  receiver   User            @relation(fields: [receiverId], references: [id], name: "receiver")
-  receiverId String
+  sender     User?           @relation(fields: [senderId], references: [id], name: "sender", onDelete: SetNull)
+  senderId   String?
+  receiver   User?           @relation(fields: [receiverId], references: [id], name: "receiver", onDelete: SetNull)
+  receiverId String?
   cards      CardsInTrades[]
 }
 
 model CardsInTrades {
-  trade   Trade  @relation(fields: [tradeId], references: [id])
+  trade   Trade  @relation(fields: [tradeId], references: [id], onDelete: Cascade)
   tradeId String
-  card    Card   @relation(fields: [cardId], references: [id])
+  card    Card   @relation(fields: [cardId], references: [id], onDelete: Cascade)
   cardId  String
 
   @@id([tradeId, cardId])

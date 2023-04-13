@@ -182,7 +182,11 @@ const acceptTrade = async (req: Request, res: Response) => {
     res.status(404).json({ message: "Trade not found" });
     return;
   }
-  if (trade.status !== TradeStatus.PENDING) {
+  if (
+    trade.status !== TradeStatus.PENDING ||
+    trade.receiverId === null ||
+    trade.senderId === null
+  ) {
     res.status(400).json({ message: "Trade is not pending" });
     return;
   }
