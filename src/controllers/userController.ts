@@ -2,6 +2,7 @@ import { Express, Request, Response } from "express";
 import prisma from "../prisma";
 import { Role, User } from "@prisma/client";
 import { SelectFields } from "../types";
+import { exclude } from "../utils";
 
 const getUsers = async (req: Request, res: Response) => {
   const isAdmin = req.session.user?.role === Role.ADMIN;
@@ -37,12 +38,18 @@ const getUsers = async (req: Request, res: Response) => {
 };
 
 const getUser = async (req: Request, res: Response) => {
+  const isAdmin = req.session.user?.role === Role.ADMIN;
+
   const user = await prisma.user.findUnique({
     where: {
       id: req.params.id,
     },
   });
-  res.json(user);
+  if (!user) {
+    res.sendStatus(404);
+    return;
+  }
+  res.json(exclude(user, isAdmin ? ["password"] : ["password", "email"]));
 };
 
 export default (app: Express) => {

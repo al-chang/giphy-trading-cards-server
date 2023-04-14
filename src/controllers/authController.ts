@@ -68,9 +68,15 @@ const profile = async (req: Request, res: Response) => {
     where: {
       id: userId,
     },
+    select: {
+      id: true,
+      username: true,
+      email: true,
+      role: true,
+    },
   });
   if (user) {
-    res.json(exclude(user, ["password"]));
+    res.json(user);
   } else {
     res.sendStatus(404);
   }
