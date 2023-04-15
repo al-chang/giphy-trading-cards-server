@@ -100,8 +100,7 @@ const openPack = async (req: Request, res: Response) => {
     prisma.card.create({
       data: {
         gif,
-        // @ts-ignore
-        name: randomword(),
+        name: randomword(5).join(" "),
         ownerId: user!.id,
         packId: pack.id,
         source,
