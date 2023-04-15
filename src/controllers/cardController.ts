@@ -128,18 +128,21 @@ const getPacks = async (req: Request, res: Response) => {
 };
 
 export const createPack = async (req: Request, res: Response) => {
-  const { name, price, tags, coverGif } = req.body as {
+  const { name, price, tags } = req.body as {
     name: string;
     price: number;
     tags: string[];
-    coverGif: string;
   };
+
+  const { gif } = await getRandomGIFs(
+    tags[Math.floor(Math.random() * tags.length)]
+  );
   const newPack = await prisma.pack.create({
     data: {
       name,
       price,
       tags,
-      coverGif,
+      coverGif: gif,
     },
   });
   res.json(newPack);
