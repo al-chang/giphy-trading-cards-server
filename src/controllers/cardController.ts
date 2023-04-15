@@ -3,6 +3,7 @@ import sessionCheck from "../middleware/sessionCheck";
 import prisma from "../prisma";
 import { getRandomGIFs } from "../services/giphyService";
 import adminCheck from "../middleware/adminCheck";
+import randomword from "random-words";
 
 const getCards = async (req: Request, res: Response) => {
   const page = parseInt(req.query.page as string) || 1;
@@ -92,15 +93,18 @@ const openPack = async (req: Request, res: Response) => {
     res.sendStatus(403);
     return;
   }
-  const newCardGif = await getRandomGIFs(
+  const { gif, source } = await getRandomGIFs(
     pack.tags[Math.floor(Math.random() * pack.tags.length)]
   );
   const [newCard] = await prisma.$transaction([
     prisma.card.create({
       data: {
-        gif: newCardGif,
+        gif,
+        // @ts-ignore
+        name: randomword(),
         ownerId: user!.id,
         packId: pack.id,
+        source,
       },
     }),
     prisma.user.update({

@@ -64,6 +64,7 @@ model Card {
   owner     User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId   String
   trades    CardsInTrades[]
+  source    String
 }
 
 model Trade {
