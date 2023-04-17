@@ -55,6 +55,7 @@ model Pack {
 
 model Card {
   id        String          @id @unique @default(uuid())
+  name      String
   gif       String
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
@@ -63,6 +64,7 @@ model Card {
   owner     User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId   String
   trades    CardsInTrades[]
+  source    String
 }
 
 model Trade {

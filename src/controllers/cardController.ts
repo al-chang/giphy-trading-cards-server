@@ -3,10 +3,11 @@ import sessionCheck from "../middleware/sessionCheck";
 import prisma from "../prisma";
 import { getRandomGIFs } from "../services/giphyService";
 import adminCheck from "../middleware/adminCheck";
+import randomword from "random-words";
 
 const getCards = async (req: Request, res: Response) => {
-  const page = parseInt(req.params.page) || 1;
-  const limit = parseInt(req.params.limit) || 10;
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
   const offset = (page - 1) * limit;
 
   // Filters
@@ -17,15 +18,20 @@ const getCards = async (req: Request, res: Response) => {
     prisma.card.findMany({
       skip: offset,
       take: limit,
-      include: {
-        pack: true,
+      where: {
+        ownerId: ownerId ? ownerId : undefined,
+        packId: packId ? packId : undefined,
       },
+      orderBy: {
+        createdAt: "desc",
+      },
+    }),
+    prisma.card.count({
       where: {
         ownerId: ownerId ? ownerId : undefined,
         packId: packId ? packId : undefined,
       },
     }),
-    prisma.card.count(),
   ]);
 
   const next = total > page * limit ? page + 1 : null;
@@ -41,14 +47,29 @@ const getCards = async (req: Request, res: Response) => {
   });
 };
 
-const getUserCards = async (req: Request, res: Response) => {
-  const { userId } = req.params;
-  const cards = await prisma.card.findMany({
+const getCard = async (req: Request, res: Response) => {
+  const { cardId } = req.params;
+  const card = await prisma.card.findUnique({
     where: {
-      ownerId: userId,
+      id: cardId,
+    },
+    include: {
+      pack: true,
+      owner: {
+        select: {
+          id: true,
+          username: true,
+        },
+      },
     },
   });
-  res.json(cards);
+
+  if (!card) {
+    res.sendStatus(404);
+    return;
+  }
+
+  res.json(card);
 };
 
 const openPack = async (req: Request, res: Response) => {
@@ -75,15 +96,17 @@ const openPack = async (req: Request, res: Response) => {
     res.sendStatus(403);
     return;
   }
-  const newCardGif = await getRandomGIFs(
+  const { gif, source } = await getRandomGIFs(
     pack.tags[Math.floor(Math.random() * pack.tags.length)]
   );
   const [newCard] = await prisma.$transaction([
     prisma.card.create({
       data: {
-        gif: newCardGif,
+        gif,
+        name: randomword(3).join(" "),
         ownerId: user!.id,
         packId: pack.id,
+        source,
       },
     }),
     prisma.user.update({
@@ -107,18 +130,21 @@ const getPacks = async (req: Request, res: Response) => {
 };
 
 export const createPack = async (req: Request, res: Response) => {
-  const { name, price, tags, coverGif } = req.body as {
+  const { name, price, tags } = req.body as {
     name: string;
     price: number;
     tags: string[];
-    coverGif: string;
   };
+
+  const { gif } = await getRandomGIFs(
+    tags[Math.floor(Math.random() * tags.length)]
+  );
   const newPack = await prisma.pack.create({
     data: {
       name,
       price,
       tags,
-      coverGif,
+      coverGif: gif,
     },
   });
   res.json(newPack);
@@ -149,7 +175,7 @@ export const updatePack = async (req: Request, res: Response) => {
 export default (app: Express) => {
   // Cards operations
   app.get("/api/cards", getCards);
-  app.get("/api/cards/:userId", getUserCards);
+  app.get("/api/cards/:cardId", getCard);
 
   // Packs operations
   app.get("/api/packs", getPacks);
