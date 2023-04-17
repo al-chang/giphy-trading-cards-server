@@ -13,13 +13,35 @@ const getCards = async (req: Request, res: Response) => {
   // Filters
   const ownerId = req.query.ownerId as string;
   const packId = req.query.packId as string;
+  const following = req.query.following as string;
+
+  if (following && !req.session.user) {
+    return res.status(401).json({
+      message: "You must be logged in to see cards from users you follow",
+    });
+  }
+
+  const followingUsersIds = await prisma.follows.findMany({
+    where: {
+      followerId: req.session.user?.id,
+    },
+    select: {
+      followingId: true,
+    },
+  });
 
   const [cards, total] = await prisma.$transaction([
     prisma.card.findMany({
       skip: offset,
       take: limit,
       where: {
-        ownerId: ownerId ? ownerId : undefined,
+        ownerId: following
+          ? {
+              in: followingUsersIds.map((user) => user.followingId),
+            }
+          : ownerId
+          ? ownerId
+          : undefined,
         packId: packId ? packId : undefined,
       },
       orderBy: {
@@ -28,7 +50,13 @@ const getCards = async (req: Request, res: Response) => {
     }),
     prisma.card.count({
       where: {
-        ownerId: ownerId ? ownerId : undefined,
+        ownerId: following
+          ? {
+              in: followingUsersIds.map((user) => user.followingId),
+            }
+          : ownerId
+          ? ownerId
+          : undefined,
         packId: packId ? packId : undefined,
       },
     }),
