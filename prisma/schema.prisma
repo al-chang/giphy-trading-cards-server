@@ -22,17 +22,28 @@ enum TradeStatus {
 }
 
 model User {
-  id             String   @id @unique @default(uuid())
-  username       String   @unique
-  email          String   @unique
+  id             String    @id @unique @default(uuid())
+  username       String    @unique
+  email          String    @unique
   password       String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  role           Role     @default(USER)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  role           Role      @default(USER)
   cards          Card[]
-  coins          Int      @default(0)
-  tradesSent     Trade[]  @relation("sender")
-  tradesReceived Trade[]  @relation("receiver")
+  coins          Int       @default(0)
+  tradesSent     Trade[]   @relation("sender")
+  tradesReceived Trade[]   @relation("receiver")
+  followers      Follows[] @relation("follower")
+  following      Follows[] @relation("following")
+}
+
+model Follows {
+  follower    User   @relation("follower", fields: [followerId], references: [id])
+  followerId  String
+  following   User   @relation("following", fields: [followingId], references: [id])
+  followingId String
+
+  @@id([followerId, followingId])
 }
 
 model Session {
