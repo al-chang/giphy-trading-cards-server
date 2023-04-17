@@ -9,6 +9,7 @@ import { PrismaSessionStore } from "@quixo3/prisma-session-store";
 import prisma from "./prisma";
 import * as dotenv from "dotenv";
 import tradeController from "./controllers/tradeController";
+import coinController from "./controllers/coinController";
 
 dotenv.config();
 
@@ -47,6 +48,7 @@ userController(app);
 authController(app);
 cardController(app);
 tradeController(app);
+coinController(app);
 
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
