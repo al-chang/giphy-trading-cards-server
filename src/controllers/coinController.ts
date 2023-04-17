@@ -51,13 +51,17 @@ const collectDailyCoins = async (req: Request, res: Response) => {
     res.sendStatus(400);
     return;
   }
+
+  const coins = Math.floor(Math.random() * 400) + 100;
+
   await prisma.user.update({
     where: { id: req.session.user!.id },
     data: {
-      coins: user.coins + 100,
+      coins: user.coins + coins,
       lastCollected: now,
     },
   });
+  res.json({ coins });
   res.sendStatus(200);
 };
 
