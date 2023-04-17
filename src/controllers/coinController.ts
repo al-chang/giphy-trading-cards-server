@@ -15,7 +15,7 @@ const getCoins = async (req: Request, res: Response) => {
 };
 
 const addCoins = async (req: Request, res: Response) => {
-  const { coins, userId } = req.body;
+  const { coins, userId } = req.body as { coins: number; userId: string };
   const user = await prisma.user.findUnique({
     where: { id: userId },
   });
@@ -48,6 +48,7 @@ const collectDailyCoins = async (req: Request, res: Response) => {
     lastCollected.getMonth() === now.getMonth() &&
     lastCollected.getFullYear() === now.getFullYear()
   ) {
+    console.log("test");
     res.sendStatus(400);
     return;
   }
@@ -62,7 +63,6 @@ const collectDailyCoins = async (req: Request, res: Response) => {
     },
   });
   res.json({ coins });
-  res.sendStatus(200);
 };
 
 export default (app: Express) => {
