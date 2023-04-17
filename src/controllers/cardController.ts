@@ -22,6 +22,9 @@ const getCards = async (req: Request, res: Response) => {
         ownerId: ownerId ? ownerId : undefined,
         packId: packId ? packId : undefined,
       },
+      orderBy: {
+        createdAt: "desc",
+      },
     }),
     prisma.card.count({
       where: {
@@ -100,7 +103,7 @@ const openPack = async (req: Request, res: Response) => {
     prisma.card.create({
       data: {
         gif,
-        name: randomword(5).join(" "),
+        name: randomword(3).join(" "),
         ownerId: user!.id,
         packId: pack.id,
         source,
