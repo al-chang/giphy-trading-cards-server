@@ -8,9 +8,10 @@ const getCoins = async (req: Request, res: Response) => {
     where: { id: req.session.user!.id },
     select: {
       coins: true,
+      lastCollected: true,
     },
   });
-  res.json(coins?.coins);
+  res.json(coins);
 };
 
 const addCoins = async (req: Request, res: Response) => {
@@ -31,7 +32,38 @@ const addCoins = async (req: Request, res: Response) => {
   res.sendStatus(200);
 };
 
+const collectDailyCoins = async (req: Request, res: Response) => {
+  const user = await prisma.user.findUnique({
+    where: { id: req.session.user!.id },
+  });
+  if (!user) {
+    res.sendStatus(404);
+    return;
+  }
+  const lastCollected = new Date(user.lastCollected);
+  const now = new Date();
+
+  if (
+    lastCollected.getDate() === now.getDate() &&
+    lastCollected.getMonth() === now.getMonth() &&
+    lastCollected.getFullYear() === now.getFullYear()
+  ) {
+    res.sendStatus(400);
+    return;
+  }
+  await prisma.user.update({
+    where: { id: req.session.user!.id },
+    data: {
+      coins: user.coins + 100,
+      lastCollected: now,
+    },
+  });
+  res.sendStatus(200);
+};
+
 export default (app: Express) => {
   app.get("/api/coins", sessionCheck, getCoins);
   app.post("/api/coins", adminCheck, addCoins);
+
+  app.post("/api/coins/daily", sessionCheck, collectDailyCoins);
 };
