@@ -8,9 +8,18 @@ import sessionCheck from "../middleware/sessionCheck";
 const getUsers = async (req: Request, res: Response) => {
   const isAdmin = req.session.user?.role === Role.ADMIN;
 
-  const fields: SelectFields<User> = isAdmin
-    ? { email: true, username: true, createdAt: true, role: true, coins: true }
-    : { username: true, coins: true };
+  const adminFields: SelectFields<User> = {
+    email: true,
+    role: true,
+  };
+
+  const fields: SelectFields<User> = {
+    id: true,
+    username: true,
+    coins: true,
+    createdAt: true,
+    ...(isAdmin && adminFields),
+  };
 
   const page = parseInt(req.params.page) || 1;
   const limit = parseInt(req.params.limit) || 10;
