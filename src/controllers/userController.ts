@@ -25,11 +25,25 @@ const getUsers = async (req: Request, res: Response) => {
   const limit = parseInt(req.params.limit) || 10;
   const offset = (page - 1) * limit;
 
+  // Filters
+  const { username, email, role } = req.query;
+
   const [users, total] = await prisma.$transaction([
     prisma.user.findMany({
       select: fields,
       skip: offset,
       take: limit,
+      where: {
+        username: {
+          contains: username as string,
+        },
+        email: {
+          contains: email as string,
+        },
+        role: {
+          ...(role && { equals: role as Role }),
+        },
+      },
     }),
     prisma.user.count(),
   ]);
