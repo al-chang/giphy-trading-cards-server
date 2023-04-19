@@ -28,6 +28,22 @@ const getUsers = async (req: Request, res: Response) => {
   // Filters
   const { username, email, role } = req.query;
 
+  const whereClause = {
+    username: {
+      contains: username as string,
+    },
+    email: {
+      contains: email as string,
+    },
+    ...(!!role
+      ? {
+          role: {
+            equals: role as Role,
+          },
+        }
+      : {}),
+  };
+
   const [users, total] = await prisma.$transaction([
     prisma.user.findMany({
       select: fields,
@@ -40,11 +56,11 @@ const getUsers = async (req: Request, res: Response) => {
         email: {
           contains: email as string,
         },
-        ...(role && {
-          role: {
-            equals: role as Role,
-          },
-        }),
+        role: {
+          notIn: [Role.ADMIN, Role.USER].filter((r) =>
+            !!role ? r !== role : false
+          ),
+        },
       },
       orderBy: {
         createdAt: "desc",
