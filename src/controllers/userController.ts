@@ -44,6 +44,9 @@ const getUsers = async (req: Request, res: Response) => {
           ...(role && { equals: role as Role }),
         },
       },
+      orderBy: {
+        createdAt: "desc",
+      },
     }),
     prisma.user.count(),
   ]);
