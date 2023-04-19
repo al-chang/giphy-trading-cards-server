@@ -8,19 +8,63 @@ import sessionCheck from "../middleware/sessionCheck";
 const getUsers = async (req: Request, res: Response) => {
   const isAdmin = req.session.user?.role === Role.ADMIN;
 
-  const fields: SelectFields<User> = isAdmin
-    ? { email: true, username: true, createdAt: true, role: true, coins: true }
-    : { username: true, coins: true };
+  const adminFields: SelectFields<User> = {
+    email: true,
+    role: true,
+  };
+
+  const fields: SelectFields<User> = {
+    id: true,
+    username: true,
+    coins: true,
+    createdAt: true,
+    ...(isAdmin && adminFields),
+  };
 
   const page = parseInt(req.params.page) || 1;
   const limit = parseInt(req.params.limit) || 10;
   const offset = (page - 1) * limit;
+
+  // Filters
+  const { username, email, role } = req.query;
+
+  const whereClause = {
+    username: {
+      contains: username as string,
+    },
+    email: {
+      contains: email as string,
+    },
+    ...(!!role
+      ? {
+          role: {
+            equals: role as Role,
+          },
+        }
+      : {}),
+  };
 
   const [users, total] = await prisma.$transaction([
     prisma.user.findMany({
       select: fields,
       skip: offset,
       take: limit,
+      where: {
+        username: {
+          contains: username as string,
+        },
+        email: {
+          contains: email as string,
+        },
+        role: {
+          notIn: [Role.ADMIN, Role.USER].filter((r) =>
+            !!role ? r !== role : false
+          ),
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
     }),
     prisma.user.count(),
   ]);
