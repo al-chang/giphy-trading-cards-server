@@ -10,13 +10,37 @@ const signup = async (req: Request, res: Response) => {
     password: string;
   };
 
+  if (!newUser.email || !newUser.username || !newUser.password) {
+    res.statusMessage = "Email, username and password are required";
+    res.sendStatus(400);
+    return;
+  }
+
   const existingUser = await prisma.user.findFirst({
     where: {
-      email: newUser.email,
+      OR: [
+        {
+          email: newUser.email,
+        },
+        {
+          username: newUser.username,
+        },
+      ],
     },
   });
   if (existingUser) {
-    res.sendStatus(403);
+    if (
+      existingUser.email === newUser.email &&
+      existingUser.username === newUser.username
+    ) {
+      res.statusMessage = "Email and username already exists";
+    } else if (existingUser.email === newUser.email) {
+      res.statusMessage = "Email  already exists";
+    } else if (existingUser.username === newUser.username) {
+      res.statusMessage = "Username already exists";
+    }
+
+    res.sendStatus(409);
     return;
   }
 
