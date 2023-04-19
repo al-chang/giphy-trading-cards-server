@@ -30,7 +30,8 @@ model User {
   updatedAt      DateTime  @updatedAt
   role           Role      @default(USER)
   cards          Card[]
-  coins          Int       @default(0)
+  coins          Int       @default(1000)
+  lastCollected  DateTime  @default(now())
   tradesSent     Trade[]   @relation("sender")
   tradesReceived Trade[]   @relation("receiver")
   followers      Follows[] @relation("follower")

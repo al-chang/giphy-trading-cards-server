@@ -40,6 +40,8 @@ const getUsers = async (req: Request, res: Response) => {
 
 const getUser = async (req: Request, res: Response) => {
   const isAdmin = req.session.user?.role === Role.ADMIN;
+  const isOwnProfile = req.session.user?.id === req.params.id;
+  const showHiddenFields = isAdmin || isOwnProfile;
 
   const userQuery = prisma.user.findUnique({
     where: {
@@ -82,7 +84,9 @@ const getUser = async (req: Request, res: Response) => {
     followingCount,
     isFollowing: !!isFollowing,
   };
-  res.json(exclude(userRes, isAdmin ? ["password"] : ["password", "email"]));
+  res.json(
+    exclude(userRes, showHiddenFields ? ["password"] : ["password", "email"])
+  );
 };
 
 const followUser = async (req: Request, res: Response) => {
