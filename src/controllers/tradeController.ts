@@ -74,13 +74,12 @@ const getPendingTrade = async (req: Request, res: Response) => {
           card: {
             select: {
               id: true,
+              name: true,
               gif: true,
+              createdAt: true,
+              updatedAt: true,
+              packId: true,
               ownerId: true,
-              pack: {
-                select: {
-                  name: true,
-                },
-              },
             },
           },
         },
