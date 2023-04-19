@@ -40,9 +40,11 @@ const getUsers = async (req: Request, res: Response) => {
         email: {
           contains: email as string,
         },
-        role: {
-          ...(role && { equals: role as Role }),
-        },
+        ...(role && {
+          role: {
+            equals: role as Role,
+          },
+        }),
       },
       orderBy: {
         createdAt: "desc",
