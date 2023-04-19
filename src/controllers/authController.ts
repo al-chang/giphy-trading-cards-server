@@ -11,6 +11,7 @@ const signup = async (req: Request, res: Response) => {
   };
 
   if (!newUser.email || !newUser.username || !newUser.password) {
+    res.statusMessage = "Email, username and password are required";
     res.sendStatus(400);
     return;
   }
