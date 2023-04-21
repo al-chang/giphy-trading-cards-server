@@ -169,10 +169,97 @@ const unfollowUser = async (req: Request, res: Response) => {
   res.sendStatus(200);
 };
 
+const getFeed = async (req: Request, res: Response) => {
+  const FEED_ITEMS = 20;
+
+  const { id } = req.session.user!;
+  const following = await prisma.follows.findMany({
+    where: {
+      followerId: id,
+    },
+    select: {
+      followingId: true,
+    },
+  });
+  const selectIds = [id, ...following.map((f) => f.followingId)];
+
+  const recentTrades = await prisma.trade.findMany({
+    where: {
+      OR: [
+        {
+          senderId: {
+            in: selectIds,
+          },
+        },
+        {
+          receiverId: {
+            in: selectIds,
+          },
+        },
+      ],
+    },
+    include: {
+      sender: {
+        select: {
+          id: true,
+          username: true,
+        },
+      },
+      receiver: {
+        select: {
+          id: true,
+          username: true,
+        },
+      },
+      cards: {
+        select: {
+          card: {
+            select: {
+              id: true,
+              gif: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    take: FEED_ITEMS,
+  });
+  const recentCards = await prisma.card.findMany({
+    where: {
+      ownerId: {
+        in: selectIds,
+      },
+    },
+    include: {
+      owner: {
+        select: {
+          id: true,
+          username: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    take: FEED_ITEMS,
+  });
+
+  const feed = [...recentTrades, ...recentCards].sort(
+    (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+  );
+
+  res.json(feed);
+};
+
 export default (app: Express) => {
   app.get("/api/users", getUsers);
   app.get("/api/users/:id", getUser);
 
   app.post("/api/users/:id/follow", sessionCheck, followUser);
   app.delete("/api/users/:id/follow", sessionCheck, unfollowUser);
+
+  app.get("/api/feed", sessionCheck, getFeed);
 };
