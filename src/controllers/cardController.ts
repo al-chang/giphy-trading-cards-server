@@ -13,6 +13,7 @@ const getCards = async (req: Request, res: Response) => {
   // Filters
   const ownerId = req.query.ownerId as string;
   const packId = req.query.packId as string;
+  const cardName = req.query.cardName as string;
   const following = req.query.following as string;
 
   if (following && !req.session.user) {
@@ -43,6 +44,7 @@ const getCards = async (req: Request, res: Response) => {
           ? ownerId
           : undefined,
         packId: packId ? packId : undefined,
+        name: cardName ? { contains: cardName } : undefined,
       },
       orderBy: {
         createdAt: "desc",
@@ -157,6 +159,20 @@ const getPacks = async (req: Request, res: Response) => {
   res.json(packs);
 };
 
+const getPack = async (req: Request, res: Response) => {
+  const { packId } = req.params;
+  const pack = await prisma.pack.findUnique({
+    where: {
+      id: packId,
+    },
+  });
+  if (!pack) {
+    res.sendStatus(404);
+    return;
+  }
+  res.json(pack);
+};
+
 export const createPack = async (req: Request, res: Response) => {
   const { name, price, tags } = req.body as {
     name: string;
@@ -207,6 +223,7 @@ export default (app: Express) => {
 
   // Packs operations
   app.get("/api/packs", getPacks);
+  app.get("/api/packs/:packId", getPack);
   app.post("/api/packs", adminCheck, createPack);
   app.put("/api/packs/:packId", adminCheck, updatePack);
 
