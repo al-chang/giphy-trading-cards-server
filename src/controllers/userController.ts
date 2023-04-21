@@ -217,6 +217,7 @@ const getFeed = async (req: Request, res: Response) => {
             select: {
               id: true,
               gif: true,
+              ownerId: true,
             },
           },
         },
