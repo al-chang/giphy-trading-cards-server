@@ -255,6 +255,83 @@ const getFeed = async (req: Request, res: Response) => {
   res.json(feed);
 };
 
+const updateUsername = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { updatedUsername } = req.body as { updatedUsername: string };
+  const isOwnProfile = req.session.user?.id === id;
+  if (!isOwnProfile) {
+    res.status(400).json({ message: "Unauthorized to edit user profile" });
+  }
+
+  const updatedUser = await prisma.user.update({
+    where: {
+      id: id,
+    },
+    data: {
+      username: updatedUsername,
+    },
+  });
+
+  if (!updatedUser) {
+    res.status(404).json({ message: "Unable to update username" });
+    return;
+  }
+
+  res.json({ message: "User Updated" });
+};
+
+const updateEmail = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { updatedUserEmail } = req.body as { updatedUserEmail: string };
+  const isOwnProfile = req.session.user?.id === id;
+
+  if (!isOwnProfile) {
+    res.status(400).json({ message: "Unauthorized to edit user profile" });
+  }
+
+  const updatedUser = await prisma.user.update({
+    where: {
+      id: id,
+    },
+    data: {
+      email: updatedUserEmail,
+    },
+  });
+
+  if (!updatedUser) {
+    res.status(404).json({ message: "Unable to update email" });
+    return;
+  }
+
+  res.json({ message: "Email Updated" });
+};
+
+const updatePassword = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { updatedUserPasword } = req.body as { updatedUserPasword: string };
+  const isOwnProfile = req.session.user?.id === id;
+
+  if (!isOwnProfile) {
+    res.status(400).json({ message: "Unauthorized to edit user profile" });
+  }
+
+  const updatedUser = await prisma.user.update({
+    where: {
+      id: id,
+    },
+    data: {
+      password: updatedUserPasword,
+    },
+  });
+
+  if (!updatedUser) {
+    res.status(404).json({ message: "Unable to update password" });
+    return;
+  }
+
+  res.json({ message: "Password Updated" });
+};
+
 export default (app: Express) => {
   app.get("/api/users", getUsers);
   app.get("/api/users/:id", getUser);
@@ -263,4 +340,7 @@ export default (app: Express) => {
   app.delete("/api/users/:id/follow", sessionCheck, unfollowUser);
 
   app.get("/api/feed", sessionCheck, getFeed);
+  app.put("/api/users/:id/edit/username", updateUsername);
+  app.put("/api/users/:id/edit/email", updateEmail);
+  app.put("/api/users/:id/edit/password", updatePassword);
 };
