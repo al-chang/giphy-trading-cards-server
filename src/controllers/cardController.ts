@@ -222,12 +222,15 @@ const getCustomCards = async (req: Request, res: Response) => {
     res.sendStatus(400);
     return;
   }
-
-  const cardRequests = Array.from({ length: 12 }, () =>
-    getRandomGIFs(term as string)
-  );
-  const data = await Promise.all(cardRequests);
-  res.json(data);
+  try {
+    const cardRequests = Array.from({ length: 6 }, () =>
+      getRandomGIFs(term as string)
+    );
+    const data = await Promise.all(cardRequests);
+    res.json(data);
+  } catch (e) {
+    res.sendStatus(500);
+  }
 };
 
 const createCustomCard = async (req: Request, res: Response) => {
@@ -247,15 +250,45 @@ const createCustomCard = async (req: Request, res: Response) => {
     return;
   }
 
-  const newCard = await prisma.card.create({
+  // check if user has 10000 coins or more
+  const userCoins = await prisma.user.findUnique({
+    where: {
+      id: user!.id,
+    },
+    select: {
+      coins: true,
+    },
+  });
+  if (userCoins!.coins < 10000) {
+    res.sendStatus(403);
+    return;
+  }
+
+  const newCard = prisma.card.create({
     data: {
       gif,
       name: randomword(3).join(" "),
       ownerId: user!.id,
       source,
     },
+    select: {
+      id: true,
+    },
   });
-  res.json(newCard);
+  const takeMoney = prisma.user.update({
+    where: {
+      id: user!.id,
+    },
+    data: {
+      coins: {
+        decrement: 10000,
+      },
+    },
+  });
+
+  const [id, _user] = await prisma.$transaction([newCard, takeMoney]);
+
+  res.json(id.id);
 };
 
 export default (app: Express) => {
