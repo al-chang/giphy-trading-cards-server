@@ -216,6 +216,81 @@ export const updatePack = async (req: Request, res: Response) => {
   res.json(updatedPack);
 };
 
+const getCustomCards = async (req: Request, res: Response) => {
+  const { term } = req.query;
+  if (!term) {
+    res.sendStatus(400);
+    return;
+  }
+  try {
+    const cardRequests = Array.from({ length: 6 }, () =>
+      getRandomGIFs(term as string)
+    );
+    const data = await Promise.all(cardRequests);
+    res.json(data);
+  } catch (e) {
+    res.sendStatus(500);
+  }
+};
+
+const createCustomCard = async (req: Request, res: Response) => {
+  const { user } = req.session;
+  const { gif, source } = req.body as { gif: string; source: string };
+
+  const giphyRegex =
+    /https:\/\/media[0-9].giphy.com\/media\/[a-zA-Z0-9]+\/giphy.gif/;
+  if (!giphyRegex.test(gif)) {
+    res.sendStatus(400);
+    return;
+  }
+
+  const giphySourceRegex = /https:\/\/giphy.com\/gifs\/[a-zA-Z0-9]+/;
+  if (!giphySourceRegex.test(source)) {
+    res.sendStatus(400);
+    return;
+  }
+
+  // check if user has 10000 coins or more
+  const userCoins = await prisma.user.findUnique({
+    where: {
+      id: user!.id,
+    },
+    select: {
+      coins: true,
+    },
+  });
+  if (userCoins!.coins < 10000) {
+    res.sendStatus(403);
+    return;
+  }
+
+  const newCard = prisma.card.create({
+    data: {
+      gif,
+      name: randomword(3).join(" "),
+      ownerId: user!.id,
+      source,
+    },
+    select: {
+      id: true,
+    },
+  });
+  const takeMoney = prisma.user.update({
+    where: {
+      id: user!.id,
+    },
+    data: {
+      coins: {
+        decrement: 10000,
+      },
+    },
+  });
+
+  const [id, _user] = await prisma.$transaction([newCard, takeMoney]);
+
+  res.json(id.id);
+};
+
 export default (app: Express) => {
   // Cards operations
   app.get("/api/cards", getCards);
@@ -228,4 +303,7 @@ export default (app: Express) => {
   app.put("/api/packs/:packId", adminCheck, updatePack);
 
   app.post("/api/packs/open/:packId", sessionCheck, openPack);
+
+  app.get("/api/custom/cards", getCustomCards);
+  app.post("/api/custom/cards", sessionCheck, createCustomCard);
 };
