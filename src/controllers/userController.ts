@@ -332,6 +332,32 @@ const updatePassword = async (req: Request, res: Response) => {
   res.json({ message: "Password Updated" });
 };
 
+const updateRole = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { updatedUserRole } = req.body as { updatedUserRole: Role };
+  const currentUserAdmin = req.session.user?.role === Role.ADMIN;
+
+  if (!currentUserAdmin) {
+    res.status(400).json({ message: "Unauthorized to edit user profile" });
+  }
+
+  const updatedUser = await prisma.user.update({
+    where: {
+      id: id,
+    },
+    data: {
+      role: updatedUserRole,
+    },
+  });
+
+  if (!updatedUser) {
+    res.status(404).json({ message: "Unable to update role" });
+    return;
+  }
+
+  res.json({ message: "Role Updated" });
+};
+
 export default (app: Express) => {
   app.get("/api/users", getUsers);
   app.get("/api/users/:id", getUser);
@@ -343,4 +369,5 @@ export default (app: Express) => {
   app.put("/api/users/:id/edit/username", updateUsername);
   app.put("/api/users/:id/edit/email", updateEmail);
   app.put("/api/users/:id/edit/password", updatePassword);
+  app.put("/api/users/:id/edit/role", updateRole);
 };
