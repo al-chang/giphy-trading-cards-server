@@ -17,18 +17,17 @@ const getPendingTrades = async (req: Request, res: Response) => {
       ],
       status: TradeStatus.PENDING,
     },
-    select: {
-      id: true,
+    include: {
       sender: {
         select: {
           id: true,
-          email: true,
+          username: true,
         },
       },
       receiver: {
         select: {
           id: true,
-          email: true,
+          username: true,
         },
       },
       cards: {
