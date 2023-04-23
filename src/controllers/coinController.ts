@@ -48,7 +48,6 @@ const collectDailyCoins = async (req: Request, res: Response) => {
     lastCollected.getMonth() === now.getMonth() &&
     lastCollected.getFullYear() === now.getFullYear()
   ) {
-    console.log("test");
     res.sendStatus(400);
     return;
   }

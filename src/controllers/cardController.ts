@@ -102,6 +102,20 @@ const getCard = async (req: Request, res: Response) => {
   res.json(card);
 };
 
+const updateCard = async (req: Request, res: Response) => {
+  const { cardId } = req.params;
+  const { name } = req.body;
+  const card = await prisma.card.update({
+    where: {
+      id: cardId,
+    },
+    data: {
+      name,
+    },
+  });
+  res.json(card);
+};
+
 const openPack = async (req: Request, res: Response) => {
   const { user } = req.session;
   const { packId } = req.params;
@@ -295,6 +309,7 @@ export default (app: Express) => {
   // Cards operations
   app.get("/api/cards", getCards);
   app.get("/api/cards/:cardId", getCard);
+  app.put("/api/cards/:cardId", updateCard);
 
   // Packs operations
   app.get("/api/packs", getPacks);
