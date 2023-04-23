@@ -29,20 +29,20 @@ app.use(
   })
 );
 
-// app.set("trust proxy", 1);
-app.use(
-  session({
-    secret: process.env.SECRET || "secret",
-    resave: false,
-    saveUninitialized: true,
-    // store: new PrismaSessionStore(prisma, {
-    //   checkPeriod: 2 * 60 * 1000, //ms
-    //   dbRecordIdIsSessionId: true,
-    //   dbRecordIdFunction: undefined,
-    // }),
-    // cookie: { secure: true },
-  })
-);
+app.set("trust proxy", 1);
+// app.use(
+//   session({
+//     secret: process.env.SECRET || "secret",
+//     resave: false,
+//     saveUninitialized: true,
+//     // store: new PrismaSessionStore(prisma, {
+//     //   checkPeriod: 2 * 60 * 1000, //ms
+//     //   dbRecordIdIsSessionId: true,
+//     //   dbRecordIdFunction: undefined,
+//     // }),
+//     // cookie: { secure: true },
+//   })
+// );
 
 userController(app);
 authController(app);
